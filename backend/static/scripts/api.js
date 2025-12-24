@@ -3,9 +3,8 @@
  * Handles all communication with the backend
  */
 
-const API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
-    ? '/api'
-    : 'https://nf.khoavo.myds.me/api';
+// Hardcode API_BASE to ensure Android App works correctly
+const API_BASE = 'https://nf.khoavo.myds.me/api';
 // In production, this should NOT be hardcoded if possible, or obfuscated.
 // Simple obfuscation for the secret key (should be improved in production)
 const _s = [121, 111, 117, 114, 45, 115, 117, 112, 101, 114, 45, 115, 101, 99, 114, 101, 116, 45, 107, 101, 121, 45, 99, 104, 97, 110, 103, 101, 45, 116, 104, 105, 115];

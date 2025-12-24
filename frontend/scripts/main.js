@@ -2314,6 +2314,7 @@ async function renderCategoryView(viewType) {
         }
     } catch (error) {
         console.error('Error rendering category view:', error);
+        showToast('Connection failed: ' + error.message, 'error');
         elements.videoGrid.innerHTML = `
             <div class="flex flex-col items-center justify-center py-20 text-gray-400">
                 <span class="material-symbols-outlined text-6xl mb-4 opacity-30">error</span>
