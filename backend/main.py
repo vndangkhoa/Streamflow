@@ -9,7 +9,7 @@ from typing import Optional, Dict, List
 import time
 import os
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 
 from cache import cache
 from video_extractor import extractor, VideoInfo
@@ -1119,7 +1119,11 @@ if os.path.exists(frontend_path):
 
     @app.get("/sw.js")
     async def serve_sw():
-        return FileResponse(os.path.join(frontend_path, "sw.js"))
+        response = FileResponse(os.path.join(frontend_path, "sw.js"))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response
 
     @app.get("/favicon.ico")
     async def serve_favicon():
@@ -1128,15 +1132,25 @@ if os.path.exists(frontend_path):
             return FileResponse(favicon)
         return Response(status_code=204)
 
-    @app.get("/watch")
-    @app.get("/watch.html")
-    async def serve_watch():
-        return FileResponse(os.path.join(frontend_path, "watch.html"))
+    @app.get("/download")
+    @app.get("/download.html")
+    async def serve_download():
+        return FileResponse(os.path.join(frontend_path, "download.html"))
 
-    # Root index
-    @app.get("/")
-    async def serve_index():
-        return FileResponse(os.path.join(frontend_path, "index.html"))
+    @app.get("/watch")
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        # 1. Check if it's a file request (has extension)
+        requested_file = os.path.join(frontend_path, full_path)
+        if "." in full_path and os.path.exists(requested_file):
+            return FileResponse(requested_file)
+            
+        # 2. Otherwise serve index.html for SPA routing
+        response = FileResponse(os.path.join(frontend_path, "index.html"))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response
 
 # Catch-all for SPA navigation (only for GET requests and non-API, non-file paths)
 @app.exception_handler(404)

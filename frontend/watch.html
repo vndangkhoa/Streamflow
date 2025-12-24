@@ -40,6 +40,14 @@
             },
         }
     </script>
+    <script type="importmap">
+    {
+        "imports": {
+            "@capacitor/status-bar": "/js/capacitor-mock.js",
+            "@capacitor/haptics": "/js/capacitor-mock.js"
+        }
+    }
+    </script>
 
     <style>
         :root {
@@ -145,6 +153,11 @@
                     id="searchBtn">
                     <span class="material-symbols-outlined text-2xl">search</span>
                 </button>
+                <a href="/download.html"
+                    class="hidden md:flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-full transition-colors text-sm font-medium border border-white/10">
+                    <span class="material-symbols-outlined text-sm">download</span>
+                    <span>Install App</span>
+                </a>
                 <!-- Desktop Profile (Hidden on mobile) -->
                 <div class="hidden md:block size-8 rounded-md bg-cover bg-center cursor-pointer border border-white/20 hover:border-white/60 transition-all"
                     style="background-image: url('https://wallpapers.com/images/hd/netflix-profile-pictures-1000-x-1000-qo9h82134t9nv0j0.jpg');">

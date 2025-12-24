@@ -40,6 +40,16 @@
             },
         }
     </script>
+    <script type="importmap">
+    {
+        "imports": {
+            "@capacitor/status-bar": "/js/capacitor-mock.js",
+            "@capacitor/haptics": "/js/capacitor-mock.js",
+            "artplayer": "https://esm.sh/artplayer@5.1.7",
+            "hls.js": "https://esm.sh/hls.js@1.5.7"
+        }
+    }
+    </script>
 
     <style>
         :root {
@@ -54,6 +64,13 @@
         @media (max-width: 767px) {
             #mobileBottomNav {
                 padding-bottom: calc(1.25rem + var(--safe-bottom)) !important;
+            }
+
+            /* Add bottom padding to main content on mobile to prevent overlap with nav */
+            main,
+            #videoGrid,
+            .video-grid {
+                padding-bottom: calc(120px + var(--safe-bottom)) !important;
             }
         }
 
@@ -197,15 +214,13 @@
     <meta name="apple-mobile-web-app-title" content="StreamFlix">
     <link rel="icon" type="image/png" href="/icons/icon-512.png">
     <link rel="apple-touch-icon" href="/icons/icon-512.png">
-  <script type="module" crossorigin src="/assets/main-xeQDVOBN.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/keyboard-nav-CZ5sEhKF.js">
 </head>
 
 <body class="bg-background-light dark:bg-background-dark text-white font-display overflow-x-hidden antialiased">
 
     <!-- Splash Screen -->
     <div id="splash-screen">
-        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMTAwIj4KICAgIDxkZWZzPgogICAgICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ibG9nb0dyYWRpZW50IiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIwJSI+CiAgICAgICAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNGRjAwMDA7c3RvcC1vcGFjaXR5OjEiIC8+CiAgICAgICAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6I0IzMDAwMDtzdG9wLW9wYWNpdHk6MSIgLz4KICAgICAgICA8L2xpbmVhckdyYWRpZW50PgogICAgICAgIDxmaWx0ZXIgaWQ9InNoYWRvdyIgeD0iLTIwJSIgeT0iLTIwJSIgd2lkdGg9IjE0MCUiIGhlaWdodD0iMTQwJSI+CiAgICAgICAgICAgIDxmZUdhdXNzaWFuQmx1ciBpbj0iU291cmNlQWxwaGEiIHN0ZERldmlhdGlvbj0iMiIgLz4KICAgICAgICAgICAgPGZlT2Zmc2V0IGR4PSIwIiBkeT0iMiIgcmVzdWx0PSJvZmZzZXRibHVyIiAvPgogICAgICAgICAgICA8ZmVDb21wb25lbnRUcmFuc2Zlcj4KICAgICAgICAgICAgICAgIDxmZUZ1bmNBIHR5cGU9ImxpbmVhciIgc2xvcGU9IjAuNSIgLz4KICAgICAgICAgICAgPC9mZUNvbXBvbmVudFRyYW5zZmVyPgogICAgICAgICAgICA8ZmVNZXJnZT4KICAgICAgICAgICAgICAgIDxmZU1lcmdlTm9kZSAvPgogICAgICAgICAgICAgICAgPGZlTWVyZ2VOb2RlIGluPSJTb3VyY2VHcmFwaGljIiAvPgogICAgICAgICAgICA8L2ZlTWVyZ2U+CiAgICAgICAgPC9maWx0ZXI+CiAgICA8L2RlZnM+CiAgICAKICAgIDwhLS0gUyBJY29uL01hcmsgLS0+CiAgICA8cGF0aCBkPSJNNDAgMjAgTDYwIDIwIEw2MCA0MCBMNDAgNDAgTDQwIDYwIEw2MCA2MCBMNjAgODAgTDQwIDgwIiBmaWxsPSJub25lIiBzdHJva2U9InVybCgjbG9nb0dyYWRpZW50KSIgc3Ryb2tlLXdpZHRoPSIxMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBmaWx0ZXI9InVybCgjc2hhZG93KSIgLz4KICAgIAogICAgPCEtLSBTdHJlYW1GbGl4IFRleHQgLS0+CiAgICA8dGV4dCB4PSI4MCIgeT0iNzAiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjkwMCIgZm9udC1zaXplPSI1MiIgZmlsbD0id2hpdGUiIHN0eWxlPSJsZXR0ZXItc3BhY2luZzogLTJweDsiPgogICAgICAgIFNUUkVBTTx0c3BhbiBmaWxsPSJ1cmwoI2xvZ29HcmFkaWVudCkiPkZMSVg8L3RzcGFuPgogICAgPC90ZXh0PgogICAgCiAgICA8IS0tIFN1YnRpdGxlIC0tPgogICAgPHRleHQgeD0iODIiIHk9IjkwIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSI0MDAiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiM4ODgiIHN0eWxlPSJsZXR0ZXItc3BhY2luZzogNHB4OyB0ZXh0LXRyYW5zZm9ybTogdXBwZXJjYXNlOyI+CiAgICAgICAgUHJlbWl1bSBDaW5lbWEgRXhwZXJpZW5jZQogICAgPC90ZXh0Pgo8L3N2Zz4K" alt="StreamFlix" class="splash-logo">
+        <img src="/assets/logo.svg" alt="StreamFlix" class="splash-logo">
         <div class="loading-container">
             <div id="loading-bar"></div>
         </div>
@@ -222,7 +237,7 @@
                 <div class="flex items-center gap-8">
                     <!-- Logo -->
                     <a class="flex items-center gap-2 hover:opacity-90 transition-opacity" href="/">
-                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMTAwIj4KICAgIDxkZWZzPgogICAgICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ibG9nb0dyYWRpZW50IiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIwJSI+CiAgICAgICAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNGRjAwMDA7c3RvcC1vcGFjaXR5OjEiIC8+CiAgICAgICAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6I0IzMDAwMDtzdG9wLW9wYWNpdHk6MSIgLz4KICAgICAgICA8L2xpbmVhckdyYWRpZW50PgogICAgICAgIDxmaWx0ZXIgaWQ9InNoYWRvdyIgeD0iLTIwJSIgeT0iLTIwJSIgd2lkdGg9IjE0MCUiIGhlaWdodD0iMTQwJSI+CiAgICAgICAgICAgIDxmZUdhdXNzaWFuQmx1ciBpbj0iU291cmNlQWxwaGEiIHN0ZERldmlhdGlvbj0iMiIgLz4KICAgICAgICAgICAgPGZlT2Zmc2V0IGR4PSIwIiBkeT0iMiIgcmVzdWx0PSJvZmZzZXRibHVyIiAvPgogICAgICAgICAgICA8ZmVDb21wb25lbnRUcmFuc2Zlcj4KICAgICAgICAgICAgICAgIDxmZUZ1bmNBIHR5cGU9ImxpbmVhciIgc2xvcGU9IjAuNSIgLz4KICAgICAgICAgICAgPC9mZUNvbXBvbmVudFRyYW5zZmVyPgogICAgICAgICAgICA8ZmVNZXJnZT4KICAgICAgICAgICAgICAgIDxmZU1lcmdlTm9kZSAvPgogICAgICAgICAgICAgICAgPGZlTWVyZ2VOb2RlIGluPSJTb3VyY2VHcmFwaGljIiAvPgogICAgICAgICAgICA8L2ZlTWVyZ2U+CiAgICAgICAgPC9maWx0ZXI+CiAgICA8L2RlZnM+CiAgICAKICAgIDwhLS0gUyBJY29uL01hcmsgLS0+CiAgICA8cGF0aCBkPSJNNDAgMjAgTDYwIDIwIEw2MCA0MCBMNDAgNDAgTDQwIDYwIEw2MCA2MCBMNjAgODAgTDQwIDgwIiBmaWxsPSJub25lIiBzdHJva2U9InVybCgjbG9nb0dyYWRpZW50KSIgc3Ryb2tlLXdpZHRoPSIxMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBmaWx0ZXI9InVybCgjc2hhZG93KSIgLz4KICAgIAogICAgPCEtLSBTdHJlYW1GbGl4IFRleHQgLS0+CiAgICA8dGV4dCB4PSI4MCIgeT0iNzAiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjkwMCIgZm9udC1zaXplPSI1MiIgZmlsbD0id2hpdGUiIHN0eWxlPSJsZXR0ZXItc3BhY2luZzogLTJweDsiPgogICAgICAgIFNUUkVBTTx0c3BhbiBmaWxsPSJ1cmwoI2xvZ29HcmFkaWVudCkiPkZMSVg8L3RzcGFuPgogICAgPC90ZXh0PgogICAgCiAgICA8IS0tIFN1YnRpdGxlIC0tPgogICAgPHRleHQgeD0iODIiIHk9IjkwIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSI0MDAiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiM4ODgiIHN0eWxlPSJsZXR0ZXItc3BhY2luZzogNHB4OyB0ZXh0LXRyYW5zZm9ybTogdXBwZXJjYXNlOyI+CiAgICAgICAgUHJlbWl1bSBDaW5lbWEgRXhwZXJpZW5jZQogICAgPC90ZXh0Pgo8L3N2Zz4K" alt="StreamFlix" class="h-8 md:h-10">
+                        <img src="/assets/logo.svg" alt="StreamFlix" class="h-8 md:h-10">
                     </a>
                     <!-- Desktop Nav Links -->
                     <nav class="hidden md:flex items-center gap-6" id="mainNav">
@@ -236,6 +251,8 @@
                             href="#" data-view="cinema">New & Popular</a>
                         <a class="text-sm font-medium text-gray-300 hover:text-white transition-colors nav-link"
                             href="#" data-view="history">My List</a>
+                        <a class="text-sm font-medium text-primary hover:text-red-400 transition-colors nav-link"
+                            href="/download.html">Install App</a>
                     </nav>
                 </div>
                 <div class="flex items-center gap-4 md:gap-6">
@@ -365,7 +382,9 @@
                     <div class="flex flex-col gap-3">
                         <a class="hover:underline" href="#">Media Center</a>
                         <a class="hover:underline" href="#">Privacy</a>
+                        <a class="hover:underline" href="#">Privacy</a>
                         <a class="hover:underline" href="#">Contact Us</a>
+                        <a class="hover:underline text-primary" href="/download.html">Download App</a>
                     </div>
                 </div>
                 <div class="mb-4">
@@ -381,7 +400,14 @@
         </footer>
     </div>
 
-    <!-- Mobile Bottom Navigation -->
+    <!-- Mobile Floating "Get App" Button (shows only on mobile, above bottom nav) -->
+    <a href="/download.html"
+        class="fixed right-4 z-50 md:hidden flex items-center gap-2 bg-gradient-to-r from-[#ea2a33] to-[#ff6b6b] text-white px-4 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+        style="bottom: calc(100px + var(--safe-bottom, 0px));" aria-label="Get the App">
+        <span class="material-symbols-outlined text-lg">download</span>
+        <span class="text-sm font-semibold">Get App</span>
+    </a>
+
     <nav class="fixed bottom-0 left-0 right-0 z-50 bg-[#121212]/95 backdrop-blur-lg border-t border-white/5 pb-5 pt-3 px-6 md:hidden"
         id="mobileBottomNav">
         <div class="flex justify-between items-center max-w-lg mx-auto">
@@ -434,6 +460,9 @@
 
     <!-- Scripts -->
     <script src="/js/history-service.js"></script>
+    <script type="module" src="/scripts/search.js"></script>
+    <script type="module" src="/scripts/category-system.js"></script>
+    <script type="module" src="/scripts/main.js"></script>
 </body>
 
 </html>

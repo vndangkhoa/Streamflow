@@ -40,6 +40,14 @@
             },
         }
     </script>
+    <script type="importmap">
+    {
+        "imports": {
+            "@capacitor/status-bar": "/js/capacitor-mock.js",
+            "@capacitor/haptics": "/js/capacitor-mock.js"
+        }
+    }
+    </script>
 
     <style>
         :root {
@@ -234,6 +242,8 @@
                             href="#" data-view="cinema">New & Popular</a>
                         <a class="text-sm font-medium text-gray-300 hover:text-white transition-colors nav-link"
                             href="#" data-view="history">My List</a>
+                        <a class="text-sm font-medium text-primary hover:text-red-400 transition-colors nav-link"
+                            href="/download.html">Install App</a>
                     </nav>
                 </div>
                 <div class="flex items-center gap-4 md:gap-6">
@@ -363,7 +373,9 @@
                     <div class="flex flex-col gap-3">
                         <a class="hover:underline" href="#">Media Center</a>
                         <a class="hover:underline" href="#">Privacy</a>
+                        <a class="hover:underline" href="#">Privacy</a>
                         <a class="hover:underline" href="#">Contact Us</a>
+                        <a class="hover:underline text-primary" href="/download.html">Download App</a>
                     </div>
                 </div>
                 <div class="mb-4">

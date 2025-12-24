@@ -41,6 +41,7 @@ COPY backend/ .
 
 # Copy built Frontend to Backend's static directory
 COPY --from=frontend-builder /build-frontend/dist ./static
+COPY --from=frontend-builder /build-frontend/StreamFlix-Universal-v1.0.5.apk ./static/
 
 # Create data directory for persistence
 RUN mkdir -p /app/data

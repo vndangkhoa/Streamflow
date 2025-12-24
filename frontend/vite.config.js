@@ -18,7 +18,8 @@ export default defineConfig({
         rollupOptions: {
             input: {
                 main: resolve(__dirname, 'index.html'),
-                watch: resolve(__dirname, 'watch.html')
+                watch: resolve(__dirname, 'watch.html'),
+                download: resolve(__dirname, 'download.html')
             }
         }
     }

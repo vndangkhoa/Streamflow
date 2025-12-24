@@ -40,6 +40,16 @@
             },
         }
     </script>
+    <script type="importmap">
+    {
+        "imports": {
+            "@capacitor/status-bar": "/js/capacitor-mock.js",
+            "@capacitor/haptics": "/js/capacitor-mock.js",
+            "artplayer": "https://esm.sh/artplayer@5.1.7",
+            "hls.js": "https://esm.sh/hls.js@1.5.7"
+        }
+    }
+    </script>
 
     <style>
         :root {
@@ -120,8 +130,6 @@
     <meta name="apple-mobile-web-app-title" content="StreamFlix">
     <link rel="icon" type="image/png" href="/icons/icon-512.png">
     <link rel="apple-touch-icon" href="/icons/icon-512.png">
-  <script type="module" crossorigin src="/assets/watch-CsORLc4P.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/keyboard-nav-CZ5sEhKF.js">
 </head>
 
 <body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display overflow-x-hidden">
@@ -147,6 +155,11 @@
                     id="searchBtn">
                     <span class="material-symbols-outlined text-2xl">search</span>
                 </button>
+                <a href="/download.html"
+                    class="hidden md:flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-full transition-colors text-sm font-medium border border-white/10">
+                    <span class="material-symbols-outlined text-sm">download</span>
+                    <span>Install App</span>
+                </a>
                 <!-- Desktop Profile (Hidden on mobile) -->
                 <div class="hidden md:block size-8 rounded-md bg-cover bg-center cursor-pointer border border-white/20 hover:border-white/60 transition-all"
                     style="background-image: url('https://wallpapers.com/images/hd/netflix-profile-pictures-1000-x-1000-qo9h82134t9nv0j0.jpg');">
@@ -431,6 +444,8 @@
 
     <!-- App Scripts -->
     <script src="/js/history-service.js"></script>
+    <script type="module" src="/scripts/search.js"></script>
+    <script type="module" src="/scripts/watch.js"></script>
 </body>
 
 </html>
