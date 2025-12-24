@@ -69,13 +69,21 @@ export function initPlayer(container, options = {}) {
         theme: '#f5c518', // Golden-yellow accent
         lang: 'en',
         moreVideoAttr: {
-            crossOrigin: 'anonymous',
+            // crossOrigin: 'anonymous',
             preload: 'auto',
         },
         airplay: true,
         // HLS custom configuration for better buffering
         customType: {
             m3u8: function playM3u8(video, url, art) {
+                // Check if Android - prefer native HLS to avoid CORS/hls.js issues
+                const isAndroid = /Android/i.test(navigator.userAgent);
+
+                if (isAndroid && video.canPlayType('application/vnd.apple.mpegurl')) {
+                    video.src = url;
+                    return;
+                }
+
                 if (Hls.isSupported()) {
                     if (art.hls) {
                         art.hls.destroy();
