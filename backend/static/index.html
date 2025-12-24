@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport" />
     <title>StreamFlix - Homepage</title>
     <meta name="description" content="StreamFlix - Premium Movie Streaming">
     <meta name="theme-color" content="#141414">
@@ -42,6 +42,21 @@
     </script>
 
     <style>
+        :root {
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        #mainHeader {
+            padding-top: calc(0.5rem + var(--safe-top));
+        }
+
+        @media (max-width: 767px) {
+            #mobileBottomNav {
+                padding-bottom: calc(1.25rem + var(--safe-bottom)) !important;
+            }
+        }
+
         /* Hide scrollbar for Chrome, Safari and Opera */
         .no-scrollbar::-webkit-scrollbar {
             display: none;
@@ -97,6 +112,81 @@
         .search-modal.active {
             display: flex;
         }
+
+        /* TV Focus Ring */
+        .keyboard-focused {
+            outline: 3px solid #ea2a33 !important;
+            outline-offset: 2px !important;
+            transform: scale(1.05) !important;
+            z-index: 50 !important;
+            transition: transform 0.2s ease, outline 0.2s ease !important;
+            box-shadow: 0 0 20px rgba(234, 42, 51, 0.4) !important;
+        }
+
+        /* Splash Screen */
+        #splash-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background-color: #141414;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.8s;
+        }
+
+        #splash-screen.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .splash-logo {
+            width: 300px;
+            max-width: 80%;
+            margin-bottom: 40px;
+            animation: pulse-logo 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-logo {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.02);
+                opacity: 0.8;
+            }
+        }
+
+        .loading-container {
+            width: 240px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #loading-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #FF0000, #B30000);
+            border-radius: 10px;
+            transition: width 0.4s ease-out;
+            box-shadow: 0 0 10px rgba(234, 42, 51, 0.5);
+        }
+
+        #loading-text {
+            margin-top: 15px;
+            font-size: 12px;
+            color: #888;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
     </style>
 
     <!-- PWA Meta Tags -->
@@ -107,11 +197,21 @@
     <meta name="apple-mobile-web-app-title" content="StreamFlix">
     <link rel="icon" type="image/png" href="/icons/icon-512.png">
     <link rel="apple-touch-icon" href="/icons/icon-512.png">
-  <script type="module" crossorigin src="/assets/main-B16Z87Li.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/Toast-BwR22KmJ.js">
+  <script type="module" crossorigin src="/assets/main-xeQDVOBN.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/keyboard-nav-CZ5sEhKF.js">
 </head>
 
 <body class="bg-background-light dark:bg-background-dark text-white font-display overflow-x-hidden antialiased">
+
+    <!-- Splash Screen -->
+    <div id="splash-screen">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMTAwIj4KICAgIDxkZWZzPgogICAgICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ibG9nb0dyYWRpZW50IiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIwJSI+CiAgICAgICAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNGRjAwMDA7c3RvcC1vcGFjaXR5OjEiIC8+CiAgICAgICAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6I0IzMDAwMDtzdG9wLW9wYWNpdHk6MSIgLz4KICAgICAgICA8L2xpbmVhckdyYWRpZW50PgogICAgICAgIDxmaWx0ZXIgaWQ9InNoYWRvdyIgeD0iLTIwJSIgeT0iLTIwJSIgd2lkdGg9IjE0MCUiIGhlaWdodD0iMTQwJSI+CiAgICAgICAgICAgIDxmZUdhdXNzaWFuQmx1ciBpbj0iU291cmNlQWxwaGEiIHN0ZERldmlhdGlvbj0iMiIgLz4KICAgICAgICAgICAgPGZlT2Zmc2V0IGR4PSIwIiBkeT0iMiIgcmVzdWx0PSJvZmZzZXRibHVyIiAvPgogICAgICAgICAgICA8ZmVDb21wb25lbnRUcmFuc2Zlcj4KICAgICAgICAgICAgICAgIDxmZUZ1bmNBIHR5cGU9ImxpbmVhciIgc2xvcGU9IjAuNSIgLz4KICAgICAgICAgICAgPC9mZUNvbXBvbmVudFRyYW5zZmVyPgogICAgICAgICAgICA8ZmVNZXJnZT4KICAgICAgICAgICAgICAgIDxmZU1lcmdlTm9kZSAvPgogICAgICAgICAgICAgICAgPGZlTWVyZ2VOb2RlIGluPSJTb3VyY2VHcmFwaGljIiAvPgogICAgICAgICAgICA8L2ZlTWVyZ2U+CiAgICAgICAgPC9maWx0ZXI+CiAgICA8L2RlZnM+CiAgICAKICAgIDwhLS0gUyBJY29uL01hcmsgLS0+CiAgICA8cGF0aCBkPSJNNDAgMjAgTDYwIDIwIEw2MCA0MCBMNDAgNDAgTDQwIDYwIEw2MCA2MCBMNjAgODAgTDQwIDgwIiBmaWxsPSJub25lIiBzdHJva2U9InVybCgjbG9nb0dyYWRpZW50KSIgc3Ryb2tlLXdpZHRoPSIxMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBmaWx0ZXI9InVybCgjc2hhZG93KSIgLz4KICAgIAogICAgPCEtLSBTdHJlYW1GbGl4IFRleHQgLS0+CiAgICA8dGV4dCB4PSI4MCIgeT0iNzAiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjkwMCIgZm9udC1zaXplPSI1MiIgZmlsbD0id2hpdGUiIHN0eWxlPSJsZXR0ZXItc3BhY2luZzogLTJweDsiPgogICAgICAgIFNUUkVBTTx0c3BhbiBmaWxsPSJ1cmwoI2xvZ29HcmFkaWVudCkiPkZMSVg8L3RzcGFuPgogICAgPC90ZXh0PgogICAgCiAgICA8IS0tIFN1YnRpdGxlIC0tPgogICAgPHRleHQgeD0iODIiIHk9IjkwIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSI0MDAiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiM4ODgiIHN0eWxlPSJsZXR0ZXItc3BhY2luZzogNHB4OyB0ZXh0LXRyYW5zZm9ybTogdXBwZXJjYXNlOyI+CiAgICAgICAgUHJlbWl1bSBDaW5lbWEgRXhwZXJpZW5jZQogICAgPC90ZXh0Pgo8L3N2Zz4K" alt="StreamFlix" class="splash-logo">
+        <div class="loading-container">
+            <div id="loading-bar"></div>
+        </div>
+        <div id="loading-text">Initializing StreamFlix...</div>
+    </div>
+
     <div class="relative flex min-h-screen flex-col">
 
         <!-- Navigation -->
@@ -121,10 +221,8 @@
             <div class="px-4 md:px-12 py-2 md:py-4 flex items-center justify-between">
                 <div class="flex items-center gap-8">
                     <!-- Logo -->
-                    <a class="flex items-center gap-2 text-primary hover:opacity-90 transition-opacity" href="/">
-                        <span class="material-symbols-outlined text-4xl text-primary"
-                            style="font-variation-settings: 'FILL' 1;">movie</span>
-                        <span class="text-2xl font-bold tracking-tighter text-white hidden sm:block">StreamFlix</span>
+                    <a class="flex items-center gap-2 hover:opacity-90 transition-opacity" href="/">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgMTAwIj4KICAgIDxkZWZzPgogICAgICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ibG9nb0dyYWRpZW50IiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIwJSI+CiAgICAgICAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNGRjAwMDA7c3RvcC1vcGFjaXR5OjEiIC8+CiAgICAgICAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6I0IzMDAwMDtzdG9wLW9wYWNpdHk6MSIgLz4KICAgICAgICA8L2xpbmVhckdyYWRpZW50PgogICAgICAgIDxmaWx0ZXIgaWQ9InNoYWRvdyIgeD0iLTIwJSIgeT0iLTIwJSIgd2lkdGg9IjE0MCUiIGhlaWdodD0iMTQwJSI+CiAgICAgICAgICAgIDxmZUdhdXNzaWFuQmx1ciBpbj0iU291cmNlQWxwaGEiIHN0ZERldmlhdGlvbj0iMiIgLz4KICAgICAgICAgICAgPGZlT2Zmc2V0IGR4PSIwIiBkeT0iMiIgcmVzdWx0PSJvZmZzZXRibHVyIiAvPgogICAgICAgICAgICA8ZmVDb21wb25lbnRUcmFuc2Zlcj4KICAgICAgICAgICAgICAgIDxmZUZ1bmNBIHR5cGU9ImxpbmVhciIgc2xvcGU9IjAuNSIgLz4KICAgICAgICAgICAgPC9mZUNvbXBvbmVudFRyYW5zZmVyPgogICAgICAgICAgICA8ZmVNZXJnZT4KICAgICAgICAgICAgICAgIDxmZU1lcmdlTm9kZSAvPgogICAgICAgICAgICAgICAgPGZlTWVyZ2VOb2RlIGluPSJTb3VyY2VHcmFwaGljIiAvPgogICAgICAgICAgICA8L2ZlTWVyZ2U+CiAgICAgICAgPC9maWx0ZXI+CiAgICA8L2RlZnM+CiAgICAKICAgIDwhLS0gUyBJY29uL01hcmsgLS0+CiAgICA8cGF0aCBkPSJNNDAgMjAgTDYwIDIwIEw2MCA0MCBMNDAgNDAgTDQwIDYwIEw2MCA2MCBMNjAgODAgTDQwIDgwIiBmaWxsPSJub25lIiBzdHJva2U9InVybCgjbG9nb0dyYWRpZW50KSIgc3Ryb2tlLXdpZHRoPSIxMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBmaWx0ZXI9InVybCgjc2hhZG93KSIgLz4KICAgIAogICAgPCEtLSBTdHJlYW1GbGl4IFRleHQgLS0+CiAgICA8dGV4dCB4PSI4MCIgeT0iNzAiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjkwMCIgZm9udC1zaXplPSI1MiIgZmlsbD0id2hpdGUiIHN0eWxlPSJsZXR0ZXItc3BhY2luZzogLTJweDsiPgogICAgICAgIFNUUkVBTTx0c3BhbiBmaWxsPSJ1cmwoI2xvZ29HcmFkaWVudCkiPkZMSVg8L3RzcGFuPgogICAgPC90ZXh0PgogICAgCiAgICA8IS0tIFN1YnRpdGxlIC0tPgogICAgPHRleHQgeD0iODIiIHk9IjkwIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSI0MDAiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiM4ODgiIHN0eWxlPSJsZXR0ZXItc3BhY2luZzogNHB4OyB0ZXh0LXRyYW5zZm9ybTogdXBwZXJjYXNlOyI+CiAgICAgICAgUHJlbWl1bSBDaW5lbWEgRXhwZXJpZW5jZQogICAgPC90ZXh0Pgo8L3N2Zz4K" alt="StreamFlix" class="h-8 md:h-10">
                     </a>
                     <!-- Desktop Nav Links -->
                     <nav class="hidden md:flex items-center gap-6" id="mainNav">

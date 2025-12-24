@@ -28,3 +28,6 @@ httpx>=0.25.0
 
 # Multipart uploads
 python-multipart>=0.0.6
+
+# Image Processing
+Pillow>=10.0.0

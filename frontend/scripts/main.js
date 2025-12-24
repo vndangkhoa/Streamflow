@@ -12,6 +12,45 @@ import { showToast } from './components/Toast.js';
 import { createInfoModal } from './components/InfoModal.js';
 import { renderNewAndHotView } from './components/NewAndHot.js';
 import { KeyboardNavigation } from './keyboard-nav.js';
+import { hapticLight, hapticMedium, hapticSuccess } from './haptics.js';
+import { StatusBar, Style } from '@capacitor/status-bar';
+
+/**
+ * SplashScreen Controller
+ * Manages loading progress and cinematic transition
+ */
+const SplashScreen = {
+    elements: {
+        overlay: document.getElementById('splash-screen'),
+        bar: document.getElementById('loading-bar'),
+        text: document.getElementById('loading-text')
+    },
+    progress: 0,
+    isFinished: false,
+
+    update(percent, message) {
+        if (this.isFinished) return;
+        this.progress = Math.min(percent, 100);
+        if (this.elements.bar) this.elements.bar.style.width = `${this.progress}%`;
+        if (this.elements.text && message) this.elements.text.textContent = message;
+
+        if (this.progress >= 100) {
+            this.finish();
+        }
+    },
+
+    finish() {
+        if (this.isFinished) return;
+        this.isFinished = true;
+        setTimeout(() => {
+            if (this.elements.overlay) {
+                this.elements.overlay.classList.add('fade-out');
+                // Remove from DOM after transition to free up resources
+                setTimeout(() => this.elements.overlay.remove(), 1000);
+            }
+        }, 500);
+    }
+};
 // Drag scroll removed per user request
 // Application state
 const state = {
@@ -72,16 +111,20 @@ function setMobileNavActive(viewName) {
     });
 }
 
+
 /**
  * Initialize the application
  */
 async function init() {
+    SplashScreen.update(10, 'Initializing services...');
 
     // Initialize search
     initSearch(elements.searchInput, elements.searchResults, handleVideoPlay);
+    SplashScreen.update(20, 'Setting up navigation...');
 
     // Initialize Mobile Bottom Nav
     if (elements.mobileBottomNavButtons) {
+        // ... (existing button logic)
         elements.mobileBottomNavButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -91,6 +134,9 @@ async function init() {
                 // Update active state
                 elements.mobileBottomNavButtons.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
+
+                // Native Haptic
+                hapticLight();
 
                 // Handle routing
                 if (view === 'home') {
@@ -132,12 +178,23 @@ async function init() {
 
     // Set up event listeners
     setupEventListeners();
+    SplashScreen.update(40, 'Fetching movie catalog...');
 
     // Load home view with organized sections
-    await renderCategoryView('home');
+    try {
+        await renderCategoryView('home');
+    } catch (e) {
+        console.error('Home render failed', e);
+    }
+    SplashScreen.update(70, 'Preparing featured content...');
 
     // Render hero with featured content
-    await renderHero();
+    try {
+        await renderHero();
+    } catch (e) {
+        console.error('Hero render failed', e);
+    }
+    SplashScreen.update(90, 'Applying final touches...');
 
     // Handle view parameter from URL (e.g. for redirects from watch page)
     const urlParams = new URLSearchParams(window.location.search);
@@ -157,6 +214,16 @@ async function init() {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('/sw.js')
         });
+    }
+
+    SplashScreen.update(100, 'Welcome to StreamFlix');
+
+    // Initialize Native Status Bar
+    try {
+        await StatusBar.setStyle({ style: Style.Dark });
+        await StatusBar.setBackgroundColor({ color: '#141414' });
+    } catch (e) {
+        // Fail silently
     }
 }
 
@@ -217,7 +284,10 @@ function renderHero(video = null) {
         if (heroPlayBtn) {
             const newPlayBtn = heroPlayBtn.cloneNode(true);
             heroPlayBtn.parentNode.replaceChild(newPlayBtn, heroPlayBtn);
-            newPlayBtn.addEventListener('click', () => handleVideoPlay(featured));
+            newPlayBtn.addEventListener('click', () => {
+                hapticMedium();
+                handleVideoPlay(featured);
+            });
         }
 
         // Info button
@@ -431,6 +501,7 @@ function setupEventListeners() {
             const searchModal = document.getElementById('searchModal');
             const searchInput = document.getElementById('searchInput');
             if (searchModal) {
+                hapticLight();
                 searchModal.classList.add('active');
                 if (searchInput) setTimeout(() => searchInput.focus(), 100);
             }
@@ -445,6 +516,26 @@ function setupEventListeners() {
             if (searchModal) searchModal.classList.remove('active');
         });
     }
+
+    // Modal Player Back Button
+    const modalPlayerBackButton = document.getElementById('modalPlayerBackButton');
+    if (modalPlayerBackButton) {
+        modalPlayerBackButton.addEventListener('click', () => {
+            hapticLight();
+            if (window.history.state?.playerOpen) {
+                window.history.back();
+            } else {
+                closePlayerModal();
+            }
+        });
+    }
+
+    // Global Popstate for Modal Player
+    window.addEventListener('popstate', (event) => {
+        if (elements.playerModal?.classList.contains('active') && !event.state?.playerOpen) {
+            closePlayerModal(false);
+        }
+    });
 
     // StreamFlix Nav Links (Tailwind design)
     const streamflixNavLinks = document.querySelectorAll('.nav-link');
@@ -492,7 +583,11 @@ function setupEventListeners() {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             if (elements.playerModal?.classList.contains('active')) {
-                closePlayerModal();
+                if (window.history.state?.playerOpen) {
+                    window.history.back();
+                } else {
+                    closePlayerModal();
+                }
             }
             if (elements.searchWrapper?.classList.contains('active')) {
                 elements.searchWrapper.classList.remove('active');
@@ -1625,7 +1720,7 @@ function renderDemoContent() {
             resolution: '4K',
             category: 'movies',
             year: 2024,
-            description: 'Eddie và Venom đang chạy trốn. Bị cả hai thế giới truy đuổi, họ buộc phải đưa ra quyết định khốc liệt...',
+            description: 'Eddie và Venom đang chạy trốn. Bị cả hai hai thế giới truy đuổi, họ buộc phải đưa ra quyết định khốc liệt...',
         }
     ];
 
@@ -1813,7 +1908,13 @@ function handleVideoPlay(video) {
     // Store all videos for recommendations
     sessionStorage.setItem('allVideos', JSON.stringify(state.videos));
 
-    // Navigation to Watch => NOW INFO PAGE
+    // Handle back button gesture support via pushState if opening player in same page
+    // (Though here we navigate, it's good practice tracker)
+    if (!window.history.state?.playerOpen) {
+        window.history.pushState({ playerOpen: true }, '', window.location.href);
+    }
+
+    // Navigation to Watch
     navigateToWatch(video);
 }
 
@@ -1896,6 +1997,11 @@ async function loadEpisode(video, episode, server) {
                     autoplay: true
                 });
 
+                // Push state for back navigation
+                if (!window.history.state?.playerOpen) {
+                    window.history.pushState({ playerOpen: true }, '', window.location.href);
+                }
+
                 if (art && window.historyService) {
                     art.on('video:timeupdate', () => {
                         const currentTime = art.currentTime;
@@ -1935,14 +2041,25 @@ async function loadEpisode(video, episode, server) {
 
 /**
  * Close player modal
+ * @param {boolean} shouldUpdateHistory - Whether to update history (defaults to true)
  */
-function closePlayerModal() {
-    elements.playerModal.classList.remove('active');
-    destroyPlayer();
+function closePlayerModal(shouldUpdateHistory = true) {
+    if (elements.playerModal) {
+        elements.playerModal.classList.add('hidden');
+        elements.playerModal.classList.remove('active');
+        elements.playerModal.style.display = 'none';
+
+        // Destroy player
+        destroyPlayer();
+    }
+
+    // If we're closing and the state still thinks it's open, and we didn't come from popstate
+    if (shouldUpdateHistory && window.history.state?.playerOpen) {
+        // Handled via history.back() usually
+    }
     elements.playerContainer.innerHTML = '';
     state.currentVideo = null;
 }
-
 /**
  * Close add video modal
  */

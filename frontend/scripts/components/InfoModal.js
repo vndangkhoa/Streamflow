@@ -2,6 +2,8 @@
  * Netflix 2025 Info Modal Component
  * Premium, cinematic modal with video preview and rich metadata
  */
+import { hapticLight, hapticMedium } from '../haptics.js';
+
 export function createInfoModal(video, onClose, onPlay, recommendations = []) {
     const modal = document.createElement('div');
     modal.className = 'modal modal--info active';
@@ -145,9 +147,17 @@ export function createInfoModal(video, onClose, onPlay, recommendations = []) {
     `;
 
     // Event Listeners
-    modal.querySelector('.modal__close').addEventListener('click', () => onClose(modal));
-    modal.querySelector('.modal__backdrop').addEventListener('click', () => onClose(modal));
-    modal.querySelector('[data-action="play"]').addEventListener('click', () => onPlay(video));
+    modal.querySelector('.modal__close').addEventListener('click', () => {
+        hapticLight();
+        onClose(modal);
+    });
+    modal.querySelector('.modal__backdrop').addEventListener('click', () => {
+        onClose(modal);
+    });
+    modal.querySelector('[data-action="play"]').addEventListener('click', () => {
+        hapticMedium();
+        onPlay(video);
+    });
 
     // Autoplay header video
     const headerVideo = modal.querySelector('.modal__header-preview');

@@ -1,3 +1,5 @@
+import { api } from '../api.js';
+
 /**
  * Netflix 2025 "New & Hot" Feed Component
  * Optimized for mobile vertical scrolling
@@ -11,6 +13,9 @@ export function createNewAndHotItem(video) {
     const month = months[Math.floor(Math.random() * 12)];
     const day = Math.floor(Math.random() * 28) + 1;
 
+    // Use image proxy for performance (width 400 for better quality on larger cards)
+    const imgUrl = api.getProxyUrl(video.backdrop || video.thumbnail, 400);
+
     item.innerHTML = `
         <div class="new-hot-item__sidebar">
             <span class="new-hot-item__month">${month}</span>
@@ -19,7 +24,7 @@ export function createNewAndHotItem(video) {
         <div class="new-hot-item__content">
             <div class="new-hot-item__card">
                 <div class="new-hot-item__img-wrapper">
-                    <img src="${video.backdrop || video.thumbnail}" alt="${video.title}">
+                    <img src="${imgUrl}" alt="${video.title}">
                     <div class="new-hot-item__play">
                         <svg viewBox="0 0 24 24" fill="currentColor" width="40" height="40"><path d="M8 5v14l11-7z"/></svg>
                     </div>

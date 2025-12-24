@@ -3,9 +3,66 @@
  * Handles all communication with the backend
  */
 
-const API_BASE = '/api';
+const API_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
+    ? '/api'
+    : 'https://nf.khoavo.myds.me/api';
+// In production, this should NOT be hardcoded if possible, or obfuscated.
+// Simple obfuscation for the secret key (should be improved in production)
+const _s = [121, 111, 117, 114, 45, 115, 117, 112, 101, 114, 45, 115, 101, 99, 114, 101, 116, 45, 107, 101, 121, 45, 99, 104, 97, 110, 103, 101, 45, 116, 104, 105, 115];
+const SECRET_KEY = String.fromCharCode(..._s);
 
 class ApiClient {
+    /**
+     * Generate HMAC signature for a request
+     * @param {string} path - API path (e.g., /api/extract)
+     * @param {string} method - HTTP method
+     * @returns {Object} Headers with Signature and Timestamp
+     */
+    async signRequest(path, method = 'GET') {
+        const timestamp = Math.floor(Date.now() / 1000).toString();
+        // Path needs to be strictly /api/... as per backend request.url.path
+        const fullPath = path.startsWith('/api') ? path : `/api${path}`;
+
+        const payload = `${timestamp}${fullPath}${method.toUpperCase()}`;
+
+        const encoder = new TextEncoder();
+        const keyData = encoder.encode(SECRET_KEY);
+        const payloadData = encoder.encode(payload);
+
+        const key = await crypto.subtle.importKey(
+            'raw',
+            keyData,
+            { name: 'HMAC', hash: 'SHA-256' },
+            false,
+            ['sign']
+        );
+
+        const signatureBuffer = await crypto.subtle.sign(
+            'HMAC',
+            key,
+            payloadData
+        );
+
+        const signatureArray = Array.from(new Uint8Array(signatureBuffer));
+        const signatureHex = signatureArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+        return {
+            'X-Signature': signatureHex,
+            'X-Timestamp': timestamp
+        };
+    }
+
+    /**
+     * Get a proxied and optimized image URL
+     * @param {string} url - Original image URL
+     * @param {number} width - Desired width
+     * @returns {string} Proxied URL
+     */
+    getProxyUrl(url, width = 200) {
+        if (!url) return '';
+        return `${API_BASE}/images/proxy?url=${encodeURIComponent(url)}&width=${width}`;
+    }
+
     /**
      * Extract video stream URL
      * @param {string} url - Source video URL
@@ -13,9 +70,15 @@ class ApiClient {
      * @returns {Promise<Object>} Extraction result with stream URL
      */
     async extractVideo(url, quality = null) {
+        const path = '/api/extract';
+        const authHeaders = await this.signRequest(path, 'POST');
+
         const response = await fetch(`${API_BASE}/extract`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                ...authHeaders
+            },
             body: JSON.stringify({ url, quality })
         });
 
@@ -27,13 +90,28 @@ class ApiClient {
         return response.json();
     }
 
+    async updateHeaders(options = {}, path, method = 'GET') {
+        const authHeaders = await this.signRequest(path, method);
+        return {
+            ...options,
+            headers: {
+                ...options.headers,
+                ...authHeaders
+            }
+        };
+    }
+
     /**
      * Get available quality options for a video
      * @param {string} url - Source video URL
      * @returns {Promise<string[]>} List of available qualities
      */
     async getQualities(url) {
-        const response = await fetch(`${API_BASE}/qualities?url=${encodeURIComponent(url)}`);
+        const path = `/api/qualities`;
+        const authHeaders = await this.signRequest(path, 'GET');
+        const response = await fetch(`${API_BASE}/qualities?url=${encodeURIComponent(url)}`, {
+            headers: authHeaders
+        });
 
         if (!response.ok) {
             throw new Error('Failed to get qualities');
@@ -54,7 +132,9 @@ class ApiClient {
             url += `&category=${encodeURIComponent(category)}`;
         }
 
-        const response = await fetch(url);
+        const path = '/api/videos';
+        const authHeaders = await this.signRequest(path, 'GET');
+        const response = await fetch(url, { headers: authHeaders });
 
         if (!response.ok) {
             throw new Error('Failed to fetch videos');
@@ -69,9 +149,15 @@ class ApiClient {
      * @returns {Promise<Object>} Created video
      */
     async addVideo(video) {
+        const path = '/api/videos';
+        const authHeaders = await this.signRequest(path, 'POST');
+
         const response = await fetch(`${API_BASE}/videos`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                ...authHeaders
+            },
             body: JSON.stringify(video)
         });
 
@@ -88,8 +174,12 @@ class ApiClient {
      * @param {number} id - Video ID
      */
     async deleteVideo(id) {
+        const path = `/api/videos/${id}`;
+        const authHeaders = await this.signRequest(path, 'DELETE');
+
         const response = await fetch(`${API_BASE}/videos/${id}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: authHeaders
         });
 
         if (!response.ok) {
@@ -104,9 +194,10 @@ class ApiClient {
      * @returns {Promise<Array>} Search results
      */
     async searchVideos(query, limit = 20) {
-        const response = await fetch(
-            `${API_BASE}/search?q=${encodeURIComponent(query)}&limit=${limit}`
-        );
+        const url = `${API_BASE}/search?q=${encodeURIComponent(query)}&limit=${limit}`;
+        const path = '/api/search';
+        const authHeaders = await this.signRequest(path, 'GET');
+        const response = await fetch(url, { headers: authHeaders });
 
         if (!response.ok) {
             throw new Error('Search failed');
@@ -139,7 +230,9 @@ class ApiClient {
         if (country) url += `&country=${encodeURIComponent(country)}`;
         if (genre) url += `&genre=${encodeURIComponent(genre)}`;
 
-        const response = await fetch(url);
+        const path = '/api/rophim/catalog';
+        const authHeaders = await this.signRequest(path, 'GET');
+        const response = await fetch(url, { headers: authHeaders });
 
         if (!response.ok) {
             throw new Error('Failed to fetch RoPhim catalog');
@@ -153,7 +246,11 @@ class ApiClient {
      * @returns {Promise<Object>} Sections with movies sorted by rating
      */
     async getCuratedSections() {
-        const response = await fetch(`${API_BASE}/rophim/home/curated`);
+        const path = '/api/rophim/home/curated';
+        const authHeaders = await this.signRequest(path, 'GET');
+        const response = await fetch(`${API_BASE}/rophim/home/curated`, {
+            headers: authHeaders
+        });
 
         if (!response.ok) {
             throw new Error('Failed to fetch curated sections');
@@ -169,9 +266,10 @@ class ApiClient {
      * @returns {Promise<Object>} Search results
      */
     async searchRophim(query, limit = 20) {
-        const response = await fetch(
-            `${API_BASE}/rophim/search?q=${encodeURIComponent(query)}&limit=${limit}`
-        );
+        const url = `${API_BASE}/rophim/search?q=${encodeURIComponent(query)}&limit=${limit}`;
+        const path = '/api/rophim/search';
+        const authHeaders = await this.signRequest(path, 'GET');
+        const response = await fetch(url, { headers: authHeaders });
 
         if (!response.ok) {
             throw new Error('RoPhim search failed');
@@ -186,7 +284,11 @@ class ApiClient {
      * @returns {Promise<Object>} Sections
      */
     async getHomeSections(page = 2, view = 'home') {
-        const response = await fetch(`${API_BASE}/rophim/home/sections?page=${page}&view=${view}`);
+        const path = '/api/rophim/home/sections';
+        const authHeaders = await this.signRequest(path, 'GET');
+        const response = await fetch(`${API_BASE}/rophim/home/sections?page=${page}&view=${view}`, {
+            headers: authHeaders
+        });
         if (!response.ok) throw new Error('Failed to fetch home sections');
         return response.json();
     }
@@ -197,7 +299,11 @@ class ApiClient {
      * @returns {Promise<Object>} Movie details
      */
     async getRophimMovie(slug) {
-        const response = await fetch(`${API_BASE}/rophim/movie/${encodeURIComponent(slug)}`);
+        const path = `/api/rophim/movie/${encodeURIComponent(slug)}`;
+        const authHeaders = await this.signRequest(path, 'GET');
+        const response = await fetch(`${API_BASE}/rophim/movie/${encodeURIComponent(slug)}`, {
+            headers: authHeaders
+        });
 
         if (!response.ok) {
             throw new Error('Failed to fetch movie details');
@@ -213,8 +319,12 @@ class ApiClient {
      * @returns {Promise<Object>} Stream URL
      */
     async getRophimStream(slug, episode = 1) {
+        const path = `/api/rophim/stream/${encodeURIComponent(slug)}`;
+        const authHeaders = await this.signRequest(path, 'GET');
+
         const response = await fetch(
-            `${API_BASE}/rophim/stream/${encodeURIComponent(slug)}?episode=${episode}`
+            `${API_BASE}/rophim/stream/${encodeURIComponent(slug)}?episode=${episode}`,
+            { headers: authHeaders }
         );
 
         if (!response.ok) {
@@ -234,9 +344,15 @@ class ApiClient {
      * @returns {Promise<Object>} Stream URL
      */
     async getRophimStreamByUrl(sourceUrl, slug = '', episode = 1, server = 0) {
+        const path = '/api/rophim/stream';
+        const authHeaders = await this.signRequest(path, 'POST');
+
         const response = await fetch(`${API_BASE}/rophim/stream`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                ...authHeaders
+            },
             body: JSON.stringify({ source_url: sourceUrl, slug: slug || '', episode, server })
         });
 
@@ -245,6 +361,70 @@ class ApiClient {
             throw new Error(error.detail || 'Failed to get stream');
         }
 
+        return response.json();
+    }
+
+    /**
+     * Discover all available categories
+     * @returns {Promise<Object>} Categories
+     */
+    async discoverCategories() {
+        const path = '/api/rophim/categories/discover';
+        const authHeaders = await this.signRequest(path, 'GET');
+        const response = await fetch(`${API_BASE}/rophim/categories/discover`, {
+            headers: authHeaders
+        });
+        if (!response.ok) throw new Error('Failed to discover categories');
+        return response.json();
+    }
+
+    /**
+     * Get movies for a specific category
+     * @param {string} slug - Category slug
+     * @param {number} page - Page
+     * @returns {Promise<Object>} Movies
+     */
+    async getMoviesByCategory(slug, page = 1, limit = 24) {
+        const path = '/api/rophim/category';
+        const authHeaders = await this.signRequest(path, 'GET');
+        const response = await fetch(`${API_BASE}/rophim/category?slug=${encodeURIComponent(slug)}&page=${page}&limit=${limit}`, {
+            headers: authHeaders
+        });
+        if (!response.ok) throw new Error('Failed to fetch category');
+        return response.json();
+    }
+    /**
+     * Get themed movie sections
+     */
+    async getHotMovies(limit = 24) {
+        const path = '/api/rophim/categories/hot';
+        const authHeaders = await this.signRequest(path, 'GET');
+        const response = await fetch(`${API_BASE}/rophim/categories/hot?limit=${limit}`, { headers: authHeaders });
+        if (!response.ok) throw new Error('Failed to fetch hot movies');
+        return response.json();
+    }
+
+    async getNewReleases(limit = 24) {
+        const path = '/api/rophim/categories/new-releases';
+        const authHeaders = await this.signRequest(path, 'GET');
+        const response = await fetch(`${API_BASE}/rophim/categories/new-releases?limit=${limit}`, { headers: authHeaders });
+        if (!response.ok) throw new Error('Failed to fetch new releases');
+        return response.json();
+    }
+
+    async getTop10() {
+        const path = '/api/rophim/categories/top10';
+        const authHeaders = await this.signRequest(path, 'GET');
+        const response = await fetch(`${API_BASE}/rophim/categories/top10`, { headers: authHeaders });
+        if (!response.ok) throw new Error('Failed to fetch top 10');
+        return response.json();
+    }
+
+    async getCinemaReleases(limit = 24) {
+        const path = '/api/rophim/categories/cinema';
+        const authHeaders = await this.signRequest(path, 'GET');
+        const response = await fetch(`${API_BASE}/rophim/categories/cinema?limit=${limit}`, { headers: authHeaders });
+        if (!response.ok) throw new Error('Failed to fetch cinema releases');
         return response.json();
     }
 }

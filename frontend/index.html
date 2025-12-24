@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport" />
     <title>StreamFlix - Homepage</title>
     <meta name="description" content="StreamFlix - Premium Movie Streaming">
     <meta name="theme-color" content="#141414">
@@ -42,6 +42,21 @@
     </script>
 
     <style>
+        :root {
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        #mainHeader {
+            padding-top: calc(0.5rem + var(--safe-top));
+        }
+
+        @media (max-width: 767px) {
+            #mobileBottomNav {
+                padding-bottom: calc(1.25rem + var(--safe-bottom)) !important;
+            }
+        }
+
         /* Hide scrollbar for Chrome, Safari and Opera */
         .no-scrollbar::-webkit-scrollbar {
             display: none;
@@ -97,6 +112,81 @@
         .search-modal.active {
             display: flex;
         }
+
+        /* TV Focus Ring */
+        .keyboard-focused {
+            outline: 3px solid #ea2a33 !important;
+            outline-offset: 2px !important;
+            transform: scale(1.05) !important;
+            z-index: 50 !important;
+            transition: transform 0.2s ease, outline 0.2s ease !important;
+            box-shadow: 0 0 20px rgba(234, 42, 51, 0.4) !important;
+        }
+
+        /* Splash Screen */
+        #splash-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background-color: #141414;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.8s;
+        }
+
+        #splash-screen.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .splash-logo {
+            width: 300px;
+            max-width: 80%;
+            margin-bottom: 40px;
+            animation: pulse-logo 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-logo {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.02);
+                opacity: 0.8;
+            }
+        }
+
+        .loading-container {
+            width: 240px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #loading-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #FF0000, #B30000);
+            border-radius: 10px;
+            transition: width 0.4s ease-out;
+            box-shadow: 0 0 10px rgba(234, 42, 51, 0.5);
+        }
+
+        #loading-text {
+            margin-top: 15px;
+            font-size: 12px;
+            color: #888;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
     </style>
 
     <!-- PWA Meta Tags -->
@@ -110,6 +200,16 @@
 </head>
 
 <body class="bg-background-light dark:bg-background-dark text-white font-display overflow-x-hidden antialiased">
+
+    <!-- Splash Screen -->
+    <div id="splash-screen">
+        <img src="/assets/logo.svg" alt="StreamFlix" class="splash-logo">
+        <div class="loading-container">
+            <div id="loading-bar"></div>
+        </div>
+        <div id="loading-text">Initializing StreamFlix...</div>
+    </div>
+
     <div class="relative flex min-h-screen flex-col">
 
         <!-- Navigation -->
@@ -119,10 +219,8 @@
             <div class="px-4 md:px-12 py-2 md:py-4 flex items-center justify-between">
                 <div class="flex items-center gap-8">
                     <!-- Logo -->
-                    <a class="flex items-center gap-2 text-primary hover:opacity-90 transition-opacity" href="/">
-                        <span class="material-symbols-outlined text-4xl text-primary"
-                            style="font-variation-settings: 'FILL' 1;">movie</span>
-                        <span class="text-2xl font-bold tracking-tighter text-white hidden sm:block">StreamFlix</span>
+                    <a class="flex items-center gap-2 hover:opacity-90 transition-opacity" href="/">
+                        <img src="/assets/logo.svg" alt="StreamFlix" class="h-8 md:h-10">
                     </a>
                     <!-- Desktop Nav Links -->
                     <nav class="hidden md:flex items-center gap-6" id="mainNav">

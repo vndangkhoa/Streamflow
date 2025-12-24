@@ -14,6 +14,8 @@ from fastapi.responses import FileResponse, JSONResponse
 from cache import cache
 from video_extractor import extractor, VideoInfo
 from database import init_db, get_db, VideoRepository, Video
+from security import verify_hmac
+from image_service import get_proxied_image
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -25,7 +27,13 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://nf.khoavo.myds.me",
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "capacitor://localhost",
+        "http://localhost"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -80,6 +88,17 @@ async def startup():
     print("ℹ Use /api/admin/update to update dependencies")
 
 
+# Get images via proxy
+@app.get("/api/images/proxy")
+async def proxy_image(url: str, width: Optional[int] = None):
+    """
+    Proxy and optimize images (WebP + Resizing)
+    """
+    response = await get_proxied_image(url, width)
+    if not response:
+        raise HTTPException(status_code=404, detail="Image not found or could not be processed")
+    return response
+
 # Health check
 @app.get("/api/health")
 async def health_check():
@@ -95,7 +114,7 @@ async def health_check():
 # ============================================
 
 @app.get("/api/admin/version")
-async def get_versions():
+async def get_versions(authorized: bool = Depends(verify_hmac)):
     """Get versions of all managed dependencies"""
     from auto_updater import get_all_versions
     import asyncio
@@ -110,7 +129,7 @@ async def get_versions():
 
 
 @app.post("/api/admin/update")
-async def trigger_update(package: str = None):
+async def trigger_update(package: str = None, authorized: bool = Depends(verify_hmac)):
     """Trigger manual update of dependencies
     
     Args:
@@ -141,7 +160,7 @@ async def trigger_update(package: str = None):
 
 # Video extraction endpoint
 @app.post("/api/extract", response_model=ExtractResponse)
-async def extract_video(request: ExtractRequest):
+async def extract_video(request: ExtractRequest, authorized: bool = Depends(verify_hmac)):
     """
     Extract video stream URL from source.
     Uses cache-aside pattern with 3-hour TTL.
@@ -193,7 +212,7 @@ async def extract_video(request: ExtractRequest):
 
 # Get available qualities
 @app.get("/api/qualities")
-async def get_qualities(url: str):
+async def get_qualities(url: str, authorized: bool = Depends(verify_hmac)):
     """Get available quality options for a video"""
     try:
         qualities = await extractor.get_available_qualities(url)
@@ -204,7 +223,7 @@ async def get_qualities(url: str):
 
 # Video CRUD endpoints
 @app.post("/api/videos", response_model=VideoResponse)
-async def create_video(video: VideoCreate, db=Depends(get_db)):
+async def create_video(video: VideoCreate, db=Depends(get_db), authorized: bool = Depends(verify_hmac)):
     """Add a video to the library"""
     repo = VideoRepository(db)
     
@@ -222,7 +241,8 @@ async def list_videos(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
     category: Optional[str] = None,
-    db=Depends(get_db)
+    db=Depends(get_db),
+    authorized: bool = Depends(verify_hmac)
 ):
     """List all videos with pagination"""
     repo = VideoRepository(db)
@@ -232,7 +252,7 @@ async def list_videos(
 
 
 @app.get("/api/videos/{video_id}", response_model=VideoResponse)
-async def get_video(video_id: int, db=Depends(get_db)):
+async def get_video(video_id: int, db=Depends(get_db), authorized: bool = Depends(verify_hmac)):
     """Get video by ID"""
     repo = VideoRepository(db)
     video = repo.get_by_id(video_id)
@@ -242,7 +262,7 @@ async def get_video(video_id: int, db=Depends(get_db)):
 
 
 @app.delete("/api/videos/{video_id}")
-async def delete_video(video_id: int, db=Depends(get_db)):
+async def delete_video(video_id: int, db=Depends(get_db), authorized: bool = Depends(verify_hmac)):
     """Delete video from library"""
     repo = VideoRepository(db)
     if repo.delete(video_id):
@@ -255,7 +275,8 @@ async def delete_video(video_id: int, db=Depends(get_db)):
 async def search_videos(
     q: str = Query(..., min_length=1),
     limit: int = Query(20, ge=1, le=50),
-    db=Depends(get_db)
+    db=Depends(get_db),
+    authorized: bool = Depends(verify_hmac)
 ):
     """Search videos by title"""
     repo = VideoRepository(db)
@@ -271,7 +292,8 @@ async def get_phimmoichill_catalog(
     category: Optional[str] = None,
     page: int = Query(1, ge=1),
     limit: int = Query(24, ge=1, le=50),
-    sort: str = Query("modified", description="Sort by: modified, year, rating")
+    sort: str = Query("modified", description="Sort by: modified, year, rating"),
+    authorized: bool = Depends(verify_hmac)
 ):
     """
     Get movie catalog from ophim API with sorting support.
@@ -440,7 +462,8 @@ async def get_phimmoichill_catalog(
 @app.get("/api/rophim/search")
 async def search_phimmoichill(
     q: str = Query(..., min_length=1),
-    limit: int = Query(20, ge=1, le=50)
+    limit: int = Query(20, ge=1, le=50),
+    authorized: bool = Depends(verify_hmac)
 ):
     """Search movies by title AND actors using ophim API"""
     import aiohttp
@@ -527,7 +550,7 @@ async def search_phimmoichill(
 
 
 @app.get("/api/rophim/categories/discover")
-async def discover_categories():
+async def discover_categories(authorized: bool = Depends(verify_hmac)):
     """
     Discover all available categories from PhimMoiChill
     Returns types, genres, countries, and years
@@ -556,7 +579,8 @@ async def discover_categories():
 async def get_movies_by_category(
     slug: str = Query(..., description="Category slug (e.g., 'the-loai/hanh-dong', 'danh-sach/phim-le')"),
     page: int = Query(1, ge=1),
-    limit: int = Query(24, ge=1, le=50)
+    limit: int = Query(24, ge=1, le=50),
+    authorized: bool = Depends(verify_hmac)
 ):
     """
     Get movies for a specific category
@@ -587,7 +611,7 @@ async def get_movies_by_category(
 
 
 @app.get("/api/rophim/home/curated")
-async def get_curated_homepage_sections():
+async def get_curated_homepage_sections(authorized: bool = Depends(verify_hmac)):
     """
     Get curated homepage sections with TOP RATED, NEW RELEASES, and popular genres.
     This provides a Rotten Tomatoes / Moviewiser style layout.
@@ -693,7 +717,7 @@ async def get_curated_homepage_sections():
 
 
 @app.get("/api/rophim/stream/{slug}")
-async def get_rophim_stream(slug: str, episode: int = 1):
+async def get_rophim_stream(slug: str, episode: int = 1, authorized: bool = Depends(verify_hmac)):
     """
     Get video stream URL from ophim API for a specific slug and episode.
     """
@@ -715,7 +739,7 @@ async def get_rophim_stream(slug: str, episode: int = 1):
         return JSONResponse(status_code=500, content={"detail": str(e)})
 
 @app.post("/api/rophim/stream")
-async def get_rophim_stream_post(data: dict):
+async def get_rophim_stream_post(data: dict, authorized: bool = Depends(verify_hmac)):
     """
     Get video stream URL (POST) - supports source_url if needed
     """
@@ -748,7 +772,7 @@ async def get_rophim_stream_post(data: dict):
 
 
 @app.get("/api/rophim/home/sections")
-async def get_home_more_sections(page: int = Query(1, ge=1), view: str = Query('home')):
+async def get_home_more_sections(page: int = Query(1, ge=1), view: str = Query('home'), authorized: bool = Depends(verify_hmac)):
     """
     Get paginated sections for homepage OR specific views (infinite scroll).
     Returns dynamic sections (Genres, Countries, etc.) or View specific sections.
@@ -788,7 +812,7 @@ def clean_movie_description(movie: Dict) -> Dict:
 
 
 @app.get("/api/rophim/movie/{slug}")
-async def get_phimmoichill_movie(slug: str):
+async def get_phimmoichill_movie(slug: str, authorized: bool = Depends(verify_hmac)):
     """Get detailed movie info from PhimMoiChill with optional TMDB enrichment"""
     import asyncio
     from rophim_scraper import get_movie_details
@@ -825,7 +849,8 @@ async def get_phimmoichill_movie(slug: str):
 async def get_phimmoichill_stream(
     slug: str,
     episode: int = Query(1, ge=1),
-    server: int = Query(0, ge=0, le=2)
+    server: int = Query(0, ge=0, le=2),
+    authorized: bool = Depends(verify_hmac)
 ):
     """Get video stream URL for a movie/episode using ophim API"""
     import asyncio
@@ -861,7 +886,7 @@ class PhimMoiChillStreamRequest(BaseModel):
 
 
 @app.post("/api/rophim/stream")
-async def get_phimmoichill_stream_by_url(request: PhimMoiChillStreamRequest):
+async def get_phimmoichill_stream_by_url(request: PhimMoiChillStreamRequest, authorized: bool = Depends(verify_hmac)):
     """Get video stream URL using slug from source_url - uses ophim API"""
     import asyncio
     import re
@@ -906,7 +931,8 @@ async def get_phimmoichill_stream_by_url(request: PhimMoiChillStreamRequest):
 @app.post("/api/crawl/trigger")
 async def trigger_crawl(
     page: int = Query(1, ge=1),
-    limit: int = Query(50, ge=1, le=100)
+    limit: int = Query(50, ge=1, le=100),
+    authorized: bool = Depends(verify_hmac)
 ):
     """
     Trigger a movie catalog crawl.
@@ -949,7 +975,7 @@ async def crawl_status():
 # ============================================
 
 @app.get("/api/rophim/categories/all")
-async def get_all_categories():
+async def get_all_categories(authorized: bool = Depends(verify_hmac)):
     """Get all themed category sections in one call"""
     import asyncio
     from category_scraper import get_categories_sync
@@ -967,7 +993,7 @@ async def get_all_categories():
 
 
 @app.get("/api/rophim/categories/hot")
-async def get_hot_category(limit: int = Query(24, ge=1, le=50)):
+async def get_hot_category(limit: int = Query(24, ge=1, le=50), authorized: bool = Depends(verify_hmac)):
     """Get Hot Movies category"""
     import asyncio
     from category_scraper import PhimMoiChillCategoryScraper
@@ -992,7 +1018,7 @@ async def get_hot_category(limit: int = Query(24, ge=1, le=50)):
 
 
 @app.get("/api/rophim/categories/new-releases")
-async def get_new_releases_category(limit: int = Query(24, ge=1, le=50)):
+async def get_new_releases_category(limit: int = Query(24, ge=1, le=50), authorized: bool = Depends(verify_hmac)):
     """Get New Releases category"""
     import asyncio
     from category_scraper import PhimMoiChillCategoryScraper
@@ -1017,7 +1043,7 @@ async def get_new_releases_category(limit: int = Query(24, ge=1, le=50)):
 
 
 @app.get("/api/rophim/categories/top10")
-async def get_top10_category():
+async def get_top10_category(authorized: bool = Depends(verify_hmac)):
     """Get Top 10 Most Watched"""
     import asyncio
     from category_scraper import PhimMoiChillCategoryScraper
@@ -1042,7 +1068,7 @@ async def get_top10_category():
 
 
 @app.get("/api/rophim/categories/cinema")
-async def get_cinema_category(limit: int = Query(24, ge=1, le=50)):
+async def get_cinema_category(limit: int = Query(24, ge=1, le=50), authorized: bool = Depends(verify_hmac)):
     """Get Cinema Releases category"""
     import asyncio
     from category_scraper import PhimMoiChillCategoryScraper
@@ -1079,22 +1105,14 @@ print(f"🔍 DEBUG: Path exists: {os.path.exists(frontend_path)}")
 if os.path.exists(frontend_path):
     print(f"✓ Serving frontend from {frontend_path}")
     
-    # Mount directories only if they exist (Vite production builds often flatten these)
-    for folder in ["assets", "icons", "scripts", "styles", "js"]:
+    # Mount main directories
+    for folder in ["assets", "icons", "scripts", "styles", "js", "public"]:
         folder_path = os.path.join(frontend_path, folder)
         if os.path.exists(folder_path):
             app.mount(f"/{folder}", StaticFiles(directory=folder_path), name=folder)
             print(f"  - Mounted /{folder}")
     
-    @app.get("/")
-    async def serve_index():
-        return FileResponse(os.path.join(frontend_path, "index.html"))
-
-    @app.get("/watch")
-    @app.get("/watch.html")
-    async def serve_watch():
-        return FileResponse(os.path.join(frontend_path, "watch.html"))
-
+    # Direct file responses for root files
     @app.get("/manifest.json")
     async def serve_manifest():
         return FileResponse(os.path.join(frontend_path, "manifest.json"))
@@ -1103,13 +1121,38 @@ if os.path.exists(frontend_path):
     async def serve_sw():
         return FileResponse(os.path.join(frontend_path, "sw.js"))
 
-# Catch-all for any other routes (SPA support)
+    @app.get("/favicon.ico")
+    async def serve_favicon():
+        favicon = os.path.join(frontend_path, "favicon.ico")
+        if os.path.exists(favicon):
+            return FileResponse(favicon)
+        return Response(status_code=204)
+
+    @app.get("/watch")
+    @app.get("/watch.html")
+    async def serve_watch():
+        return FileResponse(os.path.join(frontend_path, "watch.html"))
+
+    # Root index
+    @app.get("/")
+    async def serve_index():
+        return FileResponse(os.path.join(frontend_path, "index.html"))
+
+# Catch-all for SPA navigation (only for GET requests and non-API, non-file paths)
 @app.exception_handler(404)
-async def custom_404_handler(request, exc):
-    if not request.url.path.startswith("/api"):
+async def custom_404_handler(request: Request, exc):
+    path = request.url.path
+    # Don't intercept API or static file requests
+    if (not path.startswith("/api") and 
+        not any(path.startswith(f"/{f}") for f in ["assets", "scripts", "styles", "js", "icons"]) and
+        "." not in path.split("/")[-1]):
         if os.path.exists(os.path.join(frontend_path, "index.html")):
             return FileResponse(os.path.join(frontend_path, "index.html"))
-    return JSONResponse(status_code=404, content={"detail": "Not found"})
+    
+    return JSONResponse(
+        status_code=404, 
+        content={"detail": "Not found", "path": path}
+    )
 
 
 if __name__ == "__main__":

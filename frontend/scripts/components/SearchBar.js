@@ -63,23 +63,26 @@ export function initSearch(inputEl, resultsEl, onSelect) {
                     </div>
                 `;
             } else {
-                resultsEl.innerHTML = results.map(video => `
-                    <div class="search__result" data-video-slug="${video.slug}">
-                        <img 
-                            src="${video.poster_url || video.thumb_url || video.thumbnail || 'data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 80 45\" fill=\"%231a1a1a\"%3E%3Crect width=\"80\" height=\"45\"/%3E%3C/svg%3E'}" 
-                            alt="${escapeHtml(video.name || video.title)}"
-                            class="search__result-thumb"
-                            loading="lazy"
-                        >
-                        <div class="search__result-info">
-                            <div class="search__result-title">${escapeHtml(video.name || video.title)}</div>
-                            <div class="search__result-meta">
-                                ${video.quality ? `${video.quality} • ` : ''}
-                                ${video.year || ''}
+                resultsEl.innerHTML = results.map(video => {
+                    const thumbUrl = api.getProxyUrl(video.poster_url || video.thumb_url || video.thumbnail, 80);
+                    return `
+                        <div class="search__result" data-video-slug="${video.slug}">
+                            <img 
+                                src="${thumbUrl || 'data:image/svg+xml,%3Csvg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 80 45\" fill=\"%231a1a1a\"%3E%3Crect width=\"80\" height=\"45\"/%3E%3C/svg%3E'}" 
+                                alt="${escapeHtml(video.name || video.title)}"
+                                class="search__result-thumb"
+                                loading="lazy"
+                            >
+                            <div class="search__result-info">
+                                <div class="search__result-title">${escapeHtml(video.name || video.title)}</div>
+                                <div class="search__result-meta">
+                                    ${video.quality ? `${video.quality} • ` : ''}
+                                    ${video.year || ''}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
 
                 // Add click handlers - navigate to watch page
                 resultsEl.querySelectorAll('.search__result[data-video-slug]').forEach(el => {
@@ -94,10 +97,10 @@ export function initSearch(inputEl, resultsEl, onSelect) {
         } catch (error) {
             console.error('Search error:', error);
             resultsEl.innerHTML = `
-                <div class="search__result" style="color: var(--color-error);">
-                    <span>Search failed. Please try again.</span>
-                </div>
-            `;
+                    < div class="search__result" style = "color: var(--color-error);" >
+                        <span>Search failed. Please try again.</span>
+                </div >
+                    `;
             resultsEl.classList.add('active');
         }
     }

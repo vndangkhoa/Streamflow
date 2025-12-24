@@ -6,6 +6,8 @@
 import { api } from './api.js';
 import { showToast } from './components/Toast.js';
 import { initPlayer, destroyPlayer } from './components/VideoPlayer.js';
+import { hapticLight, hapticMedium, hapticSuccess } from './haptics.js';
+import { KeyboardNavigation } from './keyboard-nav.js';
 
 // Page State
 const state = {
@@ -93,6 +95,13 @@ function initElements() {
  * Initialize watch page
  */
 async function init() {
+    // Initialize UI elements
+    initElements();
+
+    // Initialize TV Navigation
+    const nav = new KeyboardNavigation();
+    nav.init();
+
     // Parse URL parameters
     const params = new URLSearchParams(window.location.search);
     const videoId = params.get('id');
@@ -138,15 +147,48 @@ function setupEventListeners() {
     if (elements.watchBackBtn) {
         elements.watchBackBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            if (elements.videoPlayerContainer && (elements.videoPlayerContainer.style.display !== 'none' || !elements.videoPlayerContainer.classList.contains('hidden'))) {
-                closeVideoPlayer();
+            const playerVisible = elements.videoPlayerContainer && (elements.videoPlayerContainer.style.display !== 'none' || !elements.videoPlayerContainer.classList.contains('hidden'));
+
+            if (playerVisible) {
+                hapticLight();
+                // Close player via history if possible
+                if (window.history.state?.playerOpen) {
+                    window.history.back();
+                } else {
+                    closeVideoPlayer();
+                }
             } else if (document.referrer && document.referrer.includes(window.location.host)) {
+                hapticLight();
                 window.history.back();
             } else {
                 window.location.href = '/index.html';
             }
         });
     }
+
+    // New Dedicated Player Back Button
+    const playerBackButton = document.getElementById('playerBackButton');
+    if (playerBackButton) {
+        playerBackButton.addEventListener('click', () => {
+            hapticLight();
+            if (window.history.state?.playerOpen) {
+                window.history.back();
+            } else {
+                closeVideoPlayer();
+            }
+        });
+    }
+
+    // History API for Hardware Back Button / Gestures
+    window.addEventListener('popstate', (event) => {
+        // If the player was open but the state changed (back button pressed)
+        const container = elements.videoPlayerContainer || document.getElementById('videoPlayerContainer');
+        const isPlayerOpen = container && !container.classList.contains('hidden');
+
+        if (isPlayerOpen && !event.state?.playerOpen) {
+            closeVideoPlayer(false); // Close without pushing state again
+        }
+    });
 
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
@@ -165,6 +207,9 @@ function setupEventListeners() {
     [elements.playBtn, elements.playBtnMobile, elements.mobilePlayBtn].forEach(btn => {
         if (btn) {
             btn.addEventListener('click', () => {
+                if (btn) {
+                    hapticMedium();
+                }
                 if (elements.videoPlayerContainer) {
                     elements.videoPlayerContainer.classList.remove('hidden');
                     elements.videoPlayerContainer.style.display = 'block'; // Ensure visible
@@ -180,7 +225,11 @@ function setupEventListeners() {
     // Close player button
     if (elements.closePlayer) {
         elements.closePlayer.addEventListener('click', () => {
-            closeVideoPlayer();
+            if (window.history.state?.playerOpen) {
+                window.history.back();
+            } else {
+                closeVideoPlayer();
+            }
         });
     }
 
@@ -212,6 +261,7 @@ function setupEventListeners() {
                 const added = window.historyService?.toggleFavorite(state.video);
                 updateAddListUI(added);
 
+                hapticLight();
                 if (added) {
                     showToast('Added to My List', 'success');
                 } else {
@@ -225,11 +275,13 @@ function setupEventListeners() {
     if (elements.shareBtnMobile) {
         elements.shareBtnMobile.addEventListener('click', () => {
             if (navigator.share) {
+                hapticLight();
                 navigator.share({
                     title: state.video?.title || 'StreamFlix',
                     url: window.location.href
                 });
             } else {
+                hapticLight();
                 // Fallback: Copy to clipboard
                 navigator.clipboard.writeText(window.location.href);
                 showToast('Link copied to clipboard', 'success');
@@ -247,6 +299,7 @@ function setupEventListeners() {
 
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
+                hapticLight();
                 const targetPanel = tab.dataset.tab;
 
                 // Update active tab styling
@@ -277,6 +330,7 @@ function setupEventListeners() {
             e.preventDefault();
             const view = btn.dataset.view;
             if (view) {
+                hapticLight();
                 // Redirect to home with view parameter
                 window.location.href = `/index.html?view=${view}`;
             }
@@ -287,8 +341,9 @@ function setupEventListeners() {
 
 /**
  * Close Video Player (Robust Cleanup)
+ * @param {boolean} shouldUpdateHistory - Whether to update history (defaults to true)
  */
-function closeVideoPlayer() {
+function closeVideoPlayer(shouldUpdateHistory = true) {
     // Re-resolve just in case
     const container = elements.videoPlayerContainer || document.getElementById('videoPlayerContainer');
     const player = elements.videoPlayer || document.getElementById('videoPlayer');
@@ -309,6 +364,11 @@ function closeVideoPlayer() {
 
     if (loader) {
         loader.style.display = 'none';
+    }
+
+    // If we're closing and the state still thinks it's open, and we didn't come from popstate
+    if (shouldUpdateHistory && window.history.state?.playerOpen) {
+        // We handle this via history.back() usually, but if called directly:
     }
 }
 
@@ -786,40 +846,53 @@ function renderPlayer(streamUrl, poster, title) {
             <iframe src="${streamUrl}" allowfullscreen allow="autoplay; encrypted-media"></iframe>
         `;
     } else {
-        const art = initPlayer(elements.videoPlayer, {
-            url: streamUrl,
-            poster: poster,
-            title: title + ` - Ep ${state.currentEpisode}`,
-            autoplay: true
-        });
+        // Initialize ArtPlayer
+        const art = renderArtPlayer(streamUrl, poster, title);
 
-        // Track progress
-        if (art && window.historyService) {
-            art.on('video:timeupdate', () => {
-                const currentTime = art.currentTime;
-                const duration = art.duration;
-                if (currentTime > 0 && duration > 0) {
-                    // Save every 5 seconds to avoid excessive writes
-                    if (Math.floor(currentTime) % 5 === 0) {
-                        window.historyService.addToHistory(state.video, {
-                            currentTime,
-                            duration,
-                            percentage: (currentTime / duration) * 100,
-                            episode: state.currentEpisode
-                        });
-                    }
-                }
-            });
+        // Push state to history for back navigation
+        if (!window.history.state?.playerOpen) {
+            window.history.pushState({ playerOpen: true }, '', window.location.href);
+        }
+    }
+}
 
-            // Resume from last position if available
-            const history = window.historyService.getHistory();
-            const entry = history.find(item => item.slug === state.video.slug);
-            if (entry && entry.progress && entry.progress.episode === state.currentEpisode) {
-                if (entry.progress.currentTime > 0 && entry.progress.percentage < 95) {
-                    art.once('video:canplay', () => {
-                        art.currentTime = entry.progress.currentTime;
+/**
+ * Render ArtPlayer instance
+ */
+function renderArtPlayer(streamUrl, poster, title) {
+    const art = initPlayer(elements.videoPlayer, {
+        url: streamUrl,
+        poster: poster,
+        title: title + ` - Ep ${state.currentEpisode}`,
+        autoplay: true
+    });
+
+    // Track progress
+    if (art && window.historyService) {
+        art.on('video:timeupdate', () => {
+            const currentTime = art.currentTime;
+            const duration = art.duration;
+            if (currentTime > 0 && duration > 0) {
+                // Save every 5 seconds to avoid excessive writes
+                if (Math.floor(currentTime) % 5 === 0) {
+                    window.historyService.addToHistory(state.video, {
+                        currentTime,
+                        duration,
+                        percentage: (currentTime / duration) * 100,
+                        episode: state.currentEpisode
                     });
                 }
+            }
+        });
+
+        // Resume from last position if available
+        const history = window.historyService.getHistory();
+        const entry = history.find(item => item.slug === state.video.slug);
+        if (entry && entry.progress && entry.progress.episode === state.currentEpisode) {
+            if (entry.progress.currentTime > 0 && entry.progress.percentage < 95) {
+                art.once('video:canplay', () => {
+                    art.currentTime = entry.progress.currentTime;
+                });
             }
         }
     }

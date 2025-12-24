@@ -1,8 +1,4 @@
-/**
- * PhimMoi UI - Video Card Component
- * Poster-style cards with episode badges and hover effects
- */
-
+import { api } from '../api.js';
 import { imageCache } from '../services/imageCache.js';
 
 /**
@@ -85,7 +81,9 @@ export function createVideoCard(video, onPlay, onInfo) {
     card.className = 'video-card';
     card.dataset.videoId = video.id;
 
-    const thumbnail = video.thumbnail || '';
+    // PERFORMANCE: Use backend image proxy for faster loading (WebP + Resized)
+    const originalThumbnail = video.thumbnail || '';
+    const thumbnail = api.getProxyUrl(originalThumbnail, 200);
     const year = video.year || new Date().getFullYear();
 
     // Smart badge detection

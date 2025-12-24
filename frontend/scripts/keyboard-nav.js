@@ -13,7 +13,12 @@ export class KeyboardNavigation {
             '.video-card',
             '.hero__btn',
             '.slider-btn',
-            '#topSearchBtn'
+            '#topSearchBtn',
+            '.nav-item',
+            '.category-card',
+            '.tab-btn',
+            '.episode-row',
+            '.recommendation-card'
         ];
     }
 
