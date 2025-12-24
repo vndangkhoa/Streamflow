@@ -7,6 +7,7 @@ export class KeyboardNavigation {
     constructor() {
         this.currentFocus = null;
         this.isEnabled = false;
+        this.isTVMode = this.detectTVMode();
 
         // Selectors for focusable items
         this.selectors = [
@@ -22,14 +23,25 @@ export class KeyboardNavigation {
         ];
     }
 
+    // Detect if running on Android TV or similar leanback device
+    detectTVMode() {
+        const ua = navigator.userAgent.toLowerCase();
+        return ua.includes('android') && (ua.includes('tv') || ua.includes('aftm') || ua.includes('aftt'));
+    }
+
     init() {
         this.isEnabled = true;
         document.addEventListener('keydown', this.handleKey.bind(this));
-        document.addEventListener('mousemove', this.handleMouseMove.bind(this));
 
-        // Initial focus?
-        // Usually wait for user to press a key to enter "Keyboard Mode"
-        // so we don't show focus rings to mouse users.
+        // Only add mouse handler on non-TV devices
+        if (!this.isTVMode) {
+            document.addEventListener('mousemove', this.handleMouseMove.bind(this));
+        }
+
+        // Auto-focus first card for TV mode (helps D-pad users start navigating)
+        if (this.isTVMode) {
+            setTimeout(() => this.focusFirstVisible(), 500);
+        }
     }
 
     handleMouseMove() {

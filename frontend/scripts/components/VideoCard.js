@@ -80,6 +80,7 @@ export function createVideoCard(video, onPlay, onInfo) {
     const card = document.createElement('div');
     card.className = 'video-card';
     card.dataset.videoId = video.id;
+    card.setAttribute('tabindex', '0'); // Enable D-pad focus for Android TV
 
     // PERFORMANCE: Use backend image proxy for faster loading (WebP + Resized)
     // Use optimized sizes for mobile/desktop balance (quality vs speed)

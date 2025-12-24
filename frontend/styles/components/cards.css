@@ -491,12 +491,31 @@
     text-transform: uppercase;
 }
 
-/* Keyboard Navigation */
-.video-card.keyboard-focused {
+/* Keyboard/D-pad Navigation Focus Styles */
+.video-card.keyboard-focused,
+.video-card:focus {
     z-index: var(--z-card-hover);
+    outline: none;
 }
 
-.video-card.keyboard-focused .video-card__container {
-    transform: scale(1.05);
-    box-shadow: 0 0 0 3px var(--netflix-red), var(--shadow-card-hover);
+.video-card.keyboard-focused .video-card__container,
+.video-card:focus .video-card__container {
+    transform: scale(1.08);
+    box-shadow: 
+        0 0 0 4px var(--netflix-red),
+        0 0 30px rgba(229, 9, 20, 0.5),
+        var(--shadow-card-hover);
+    border-radius: var(--card-radius);
+}
+
+/* TV Mode: Larger focus indicators for viewing distance */
+@media (min-width: 1280px) {
+    .video-card.keyboard-focused .video-card__container,
+    .video-card:focus .video-card__container {
+        transform: scale(1.1);
+        box-shadow: 
+            0 0 0 6px var(--netflix-red),
+            0 0 50px rgba(229, 9, 20, 0.6),
+            var(--shadow-card-hover);
+    }
 }

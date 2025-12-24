@@ -10,8 +10,8 @@
     <meta name="referrer" content="no-referrer">
 
     <!-- Icons -->
-    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-    <link rel="apple-touch-icon" href="assets/apple-touch-icon.svg">
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon-D7BKdTu2.svg">
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon-CmxMqamG.svg">
 
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com" rel="preconnect" />
@@ -44,16 +44,7 @@
             },
         }
     </script>
-    <script type="importmap">
-    {
-        "imports": {
-            "@capacitor/status-bar": "/js/capacitor-mock.js",
-            "@capacitor/haptics": "/js/capacitor-mock.js",
-            "artplayer": "https://esm.sh/artplayer@5.1.7",
-            "hls.js": "https://esm.sh/hls.js@1.5.7"
-        }
-    }
-    </script>
+
 
     <style>
         :root {
@@ -218,13 +209,25 @@
     <meta name="apple-mobile-web-app-title" content="StreamFlix">
     <link rel="icon" type="image/png" href="/icons/icon-512.png">
     <link rel="apple-touch-icon" href="/icons/icon-512.png">
+    <script type="importmap">
+    {
+        "imports": {
+            "@capacitor/status-bar": "/js/capacitor-mock.js",
+            "@capacitor/haptics": "/js/capacitor-mock.js",
+            "artplayer": "https://esm.sh/artplayer@5.1.7",
+            "hls.js": "https://esm.sh/hls.js@1.5.7"
+        }
+    }
+    </script>
+  <script type="module" crossorigin src="/assets/main-BGz66_54.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/keyboard-nav-CjQOo0Sk.js">
 </head>
 
 <body class="bg-background-light dark:bg-background-dark text-white font-display overflow-x-hidden antialiased">
 
     <!-- Splash Screen -->
     <div id="splash-screen">
-        <img src="/assets/logo.svg" alt="StreamFlix" class="splash-logo">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgNjAiPgogIDxkZWZzPgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJnb2xkR3JhZGllbnQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojZTUwOTE0Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6I2IyMDcwZiIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPCEtLSBQbGF5IGJ1dHRvbiBpY29uIC0tPgogIDxjaXJjbGUgY3g9IjI1IiBjeT0iMzAiIHI9IjIyIiBmaWxsPSJ1cmwoI2dvbGRHcmFkaWVudCkiLz4KICA8cG9seWdvbiBwb2ludHM9IjIwLDIwIDIwLDQwIDM4LDMwIiBmaWxsPSIjMTQxNDE0Ii8+CiAgPCEtLSBUZXh0IC0tPgogIDx0ZXh0IHg9IjU1IiB5PSI0MCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iI2ZmZmZmZiI+U3RyZWFtPHRzcGFuIGZpbGw9InVybCgjZ29sZEdyYWRpZW50KSI+RmxpeDwvdHNwYW4+PC90ZXh0Pgo8L3N2Zz4K" alt="StreamFlix" class="splash-logo">
         <div class="loading-container">
             <div id="loading-bar"></div>
         </div>
@@ -241,7 +244,7 @@
                 <div class="flex items-center gap-8">
                     <!-- Logo -->
                     <a class="flex items-center gap-2 hover:opacity-90 transition-opacity" href="/">
-                        <img src="/assets/logo.svg" alt="StreamFlix" class="h-8 md:h-10">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgNjAiPgogIDxkZWZzPgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJnb2xkR3JhZGllbnQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojZTUwOTE0Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6I2IyMDcwZiIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPCEtLSBQbGF5IGJ1dHRvbiBpY29uIC0tPgogIDxjaXJjbGUgY3g9IjI1IiBjeT0iMzAiIHI9IjIyIiBmaWxsPSJ1cmwoI2dvbGRHcmFkaWVudCkiLz4KICA8cG9seWdvbiBwb2ludHM9IjIwLDIwIDIwLDQwIDM4LDMwIiBmaWxsPSIjMTQxNDE0Ii8+CiAgPCEtLSBUZXh0IC0tPgogIDx0ZXh0IHg9IjU1IiB5PSI0MCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjI4IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iI2ZmZmZmZiI+U3RyZWFtPHRzcGFuIGZpbGw9InVybCgjZ29sZEdyYWRpZW50KSI+RmxpeDwvdHNwYW4+PC90ZXh0Pgo8L3N2Zz4K" alt="StreamFlix" class="h-8 md:h-10">
                     </a>
                     <!-- Desktop Nav Links -->
                     <nav class="hidden md:flex items-center gap-6" id="mainNav">
@@ -464,9 +467,6 @@
 
     <!-- Scripts -->
     <script src="/js/history-service.js"></script>
-    <script type="module" src="/scripts/search.js"></script>
-    <script type="module" src="/scripts/category-system.js"></script>
-    <script type="module" src="/scripts/main.js"></script>
 </body>
 
 </html>
