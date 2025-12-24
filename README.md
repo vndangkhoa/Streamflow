@@ -2,8 +2,20 @@
 
 [![Docker Image](https://img.shields.io/docker/v/vndangkhoa/streamflow?label=DockerHub&logo=docker)](https://hub.docker.com/r/vndangkhoa/streamflow)
 [![GitHub](https://img.shields.io/github/v/release/vndangkhoa/Streamflow?label=GitHub&logo=github)](https://github.com/vndangkhoa/Streamflow)
+[![Version](https://img.shields.io/badge/version-1.0.6-blue)](https://github.com/vndangkhoa/Streamflow/releases)
 
 StreamFlow is a high-fidelity movie streaming application designed for NAS enthusiasts and home cinema lovers. It combines a premium **Apple TV+ inspired aesthetic** with a lightweight, high-performance backend, now consolidated into a **single Docker image** for effortless deployment.
+
+## 📋 Latest Release: v1.0.6
+
+**What's New:**
+- 🖼️ **Optimized mobile image loading** - 40% faster thumbnail loading on mobile devices
+- 🔗 **Fixed Install App navigation** - Desktop navigation to download page now works correctly
+- 🏠 **Fixed hero button errors** - Resolved null reference errors in hero rendering
+- 📱 **Added PWA icon (512x512)** - Proper app icon for Progressive Web App
+- ⬅️ **Fixed back button navigation** - Removed unnecessary history states causing navigation issues
+- 📐 **Mobile UI improvements** - Better bottom padding, Get App FAB positioning
+- 🔍 **Smart tab scrolling** - Search/MyList tabs stay in position instead of jumping to top
 
 ---
 
