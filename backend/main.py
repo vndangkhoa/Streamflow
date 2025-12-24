@@ -2,7 +2,7 @@
 StreamFlow Backend - FastAPI Application
 High-performance video streaming with yt-dlp integration
 """
-from fastapi import FastAPI, HTTPException, Depends, Query
+from fastapi import FastAPI, HTTPException, Depends, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, HttpUrl
 from typing import Optional, Dict, List
