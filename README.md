@@ -2,23 +2,72 @@
 
 [![Docker Image](https://img.shields.io/docker/v/vndangkhoa/streamflix?label=DockerHub&logo=docker)](https://hub.docker.com/r/vndangkhoa/streamflix)
 [![GitHub](https://img.shields.io/github/v/release/vndangkhoa/Streamflow?label=GitHub&logo=github)](https://github.com/vndangkhoa/Streamflow)
-[![Version](https://img.shields.io/badge/version-1.0.10-blue)](https://github.com/vndangkhoa/Streamflow/releases)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue)](https://github.com/vndangkhoa/Streamflow/releases)
 
 StreamFlow is a high-fidelity movie streaming application designed for NAS enthusiasts and home cinema lovers. It combines a premium **Apple TV+ inspired aesthetic** with a lightweight, high-performance backend, now consolidated into a **single Docker image** for effortless deployment.
 
-## 📋 Latest Release: v1.0.10
+## 📋 Latest Release: v1.2.0
 
-**What's New in v1.0.10:**
-- 📺 **Android TV Support:** Full D-pad navigation for remote control usage
-- 🎮 **Improved TV Detection:** Auto-detects Android TV, Fire TV, Shield, and other TV devices
-- 🎯 **Row-Based Navigation:** Left/Right arrows stay within row, Up/Down moves between rows
-- ⬅️ **Back Button Support:** Android TV back button closes modals and returns to previous screen
-- ✨ **Enhanced Focus Styles:** Larger focus indicators for 10-foot viewing distance
-- 📱 **Separate APK Downloads:** Mobile and TV versions available on download page
+**What's New in v1.2.0:**
+- 🎬 **Animated Splash Screen:** Premium logo animation on app launch
+- 📺 **Continue Watching:** Watch history persisted across sessions
+- ⭐ **My List:** Save favorite movies for quick access
+- ⚡ **Faster Loading:** Optimized splash screen (1.2s) and lazy loading
+- � **Bug Fixes:** Fixed video playback, improved stability
 
-**Previous (v1.0.9):**
-- 📱 GitHub Releases APK hosting
-- 🎨 Updated Android launcher icon
+**Previous (v1.1.0):**
+- 📺 Native Android TV App with Leanback UI
+- 🎮 ExoPlayer Integration for HLS streaming
+- 🔍 Voice Search support
+
+---
+
+
+## 📺 Native Android TV App
+
+A dedicated native Android TV app built with Google's **Leanback** library for the optimal TV experience.
+
+### Features
+| Feature | Description |
+|---------|-------------|
+| **Leanback UI** | Netflix-style horizontal rows with focus animations |
+| **ExoPlayer** | High-quality HLS video streaming with buffering |
+| **Voice Search** | Native Google voice search integration |
+| **D-Pad Navigation** | Seamless remote control navigation |
+| **Curated Home** | Personalized sections (Top Rated, New, Genres) |
+| **Splash Screen** | Animated logo with premium launch experience |
+| **Continue Watching** | Resume where you left off with watch history |
+| **My List** | Save favorite movies for quick access |
+
+### Downloads
+- **[Download APK (v1.2.0)](https://github.com/vndangkhoa/Streamflow/releases/download/v1.2.0/StreamFlix-TV-v1.2.0-debug.apk)** - Direct Download
+- **[All Releases](https://github.com/vndangkhoa/Streamflow/releases/tag/v1.2.0)** - View Release Page
+
+### Installation
+
+```bash
+# Install via ADB
+adb install StreamFlix-TV-v1.2.0-debug.apk
+```
+
+### Project Structure
+```
+android-tv/
+├── app/src/main/java/com/streamflix/tv/
+│   ├── data/
+│   │   ├── api/             # Retrofit API client with HMAC auth
+│   │   ├── model/           # Movie, ApiResponse models
+│   │   ├── WatchHistoryManager.kt  # Persistent watch history
+│   │   └── MyListManager.kt        # User favorites
+│   └── ui/
+│       ├── browse/          # Main browse screen (Leanback)
+│       ├── details/         # Movie details with actions
+│       ├── playback/        # ExoPlayer video playback
+│       └── search/          # Voice + text search
+├── SplashActivity.kt        # Animated splash screen
+└── gradle/
+```
+
 
 ---
 
@@ -63,7 +112,7 @@ version: '3.8'
 services:
   # StreamFlow Unified (Backend + Frontend)
   app:
-    image: vndangkhoa/streamflix:1.0.10
+    image: vndangkhoa/streamflix:1.1.0
     platform: linux/amd64
     ports:
       - "3478:8000"
@@ -105,6 +154,7 @@ services:
 - **Backend Core**: FastAPI (Python 3.11), SQLAlchemy, Redis
 - **Scraping Engine**: Playwright (Headless Chromium) & `aiohttp` for resilient data extraction
 - **Frontend Engine**: Vanilla JS (ES6+), Vite, ArtPlayer.js
+- **Android TV**: Kotlin, Leanback, ExoPlayer (Media3), Retrofit
 - **Styling**: Modern CSS with deep backdrop filters and Liquid Glass design tokens
 - **Architecture**: Multi-stage Docker Build (Debian-slim)
 
